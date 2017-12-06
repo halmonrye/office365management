@@ -1,2 +1,2 @@
 # office365management
-Various scripts used for managing Office 365, mostly PowerShell
+This is the beginning of a collection of scripts that we find useful for managing our Office 365 tenants.
