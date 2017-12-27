@@ -1,56 +1,57 @@
 <#
-        .Synopsis 
-            Use for when an Office 365 account has been compromised.
-			
-        .Description
-            The 'RemediateBreachedAccount.ps1' will remediate the attack to the accounts compromised and will remove any standing access to those accounts. It will perform the following actions:
+.Synopsis 
+	Use for when an Office 365 account has been compromised.
+	
+.Description
+	The 'RemediateBreachedAccount.ps1' will remediate the attack to the accounts compromised and will remove any standing access to those accounts. It will perform the following actions:
 
-			Revoke Microsoft Online session tokens
-			Revoke OneDrive Session Tokens
-			Enable Mailbox Auditing
-			Remove Mailbox Delegates
-			Disable Mailforwarding Rules To External Domains
-			Remove MailboxForwarding
-			Enable Multi-Factor Authentication (MFA) on the user's account (optional, un-comment 'Enable-MFA $upn' near the bottom)
-			Set password complexity on the account to be high
-			Reset the Password
-			Produce an Audit Log for you to review
- 
-			Prerequisites:
-				(More than I think are needed for this script, but you will need them for other work so, yes, go ahead with all of these)
-				Install the Microsoft .NET Framework 4.5.x - https://docs.microsoft.com/en-us/dotnet/framework/install/guide-for-developers
-				Install the Windows Management Framework 4.0 - https://www.microsoft.com/en-us/download/details.aspx?id=40855
-				Install the Microsoft Online Services Sign-In Assistant for IT Professionals RTW - https://www.microsoft.com/en-us/download/details.aspx?id=41950
-				Install the Azure Active Directory Connection - https://connect.microsoft.com/site1164/Downloads/DownloadDetails.aspx?DownloadID=59185
-					Download and run the installer
-					Open PowerShell as an Administrator
-					Install-Module AzureAD
-					Respond 'Y' to install the NuGet provider
-					Allow the Untrusted repository 'PSGallery' by responding 'Y'
-				Set-ExecutionPolicy RemoteSigned
-			
-        .Parameter upn
-            The User Principal Name, the Office 365 account of the affected user.  Usually this is their e-mail address, but may be an "onmicrosoft" address: "joeschmoe@uptimesciences.onmicrosoft.com"
-			This is the "Username" from the Office 365 Active Users dashboard
-             
-        .Example
-            RemediateBreachedAccount.ps1 joeschmoe@uptimesciences.com
- 
-        .Notes
-            Author : BKoeller
-            WebSite: https://github.com/OfficeDev/O365-InvestigationTooling/commits?author=bkoeller
-			Updates: Hal Noble - UpTime Sciences
-			WebSite: https://www.uptimesciences.com
+	Revoke Microsoft Online session tokens
+	Revoke OneDrive Session Tokens
+	Enable Mailbox Auditing
+	Remove Mailbox Delegates
+	Disable Mailforwarding Rules To External Domains
+	Remove MailboxForwarding
+	Enable Multi-Factor Authentication (MFA) on the user's account (optional, un-comment 'Enable-MFA $upn' near the bottom)
+	Set password complexity on the account to be high
+	Reset the Password
+	Produce an Audit Log for you to review
 
-			Future Ideas:
-				try:  Revoke-AzureADUserAllRefreshToken -ObjectId (Get-AzureADUser -SearchString huku).objectId
-				groups?: Get-AzureADGroup -SearchString CloudSecGrp | Get-AzureADGroupMember | Revoke-AzureADUserAllRefreshToken
-				Add more error checking as I have noticed that sometimes the Msol session does not always initiate.  Add session initiation checks and re-tries
-				
-			Updates
-				2017-11-30 - hn - Added header, added and removed 'AllowClobber' on session imports, added session cleanupGet-Mailbox
-				2017-12-06 - hn - Added SharePoint/OneDrive session revocation
+	Prerequisites:
+		(More than I think are needed for this script, but you will need them for other work so, yes, go ahead with all of these)
+		Install the Microsoft .NET Framework 4.5.x - https://docs.microsoft.com/en-us/dotnet/framework/install/guide-for-developers
+		Install the Windows Management Framework 4.0 - https://www.microsoft.com/en-us/download/details.aspx?id=40855
+		Install the Microsoft Online Services Sign-In Assistant for IT Professionals RTW - https://www.microsoft.com/en-us/download/details.aspx?id=41950
+		Install the Azure Active Directory Connection - https://connect.microsoft.com/site1164/Downloads/DownloadDetails.aspx?DownloadID=59185
+			Download and run the installer
+			Open PowerShell as an Administrator
+			Install-Module AzureAD
+			Respond 'Y' to install the NuGet provider
+			Allow the Untrusted repository 'PSGallery' by responding 'Y'
+		Set-ExecutionPolicy RemoteSigned
+	
+.Parameter upn
+	The User Principal Name, the Office 365 account of the affected user.  Usually this is their e-mail address, but may be an "onmicrosoft" address: "joeschmoe@uptimesciences.onmicrosoft.com"
+	This is the "Username" from the Office 365 Active Users dashboard
+	 
+.Example
+	RemediateBreachedAccount.ps1 joeschmoe@uptimesciences.com
+
+.Notes
+	Author : BKoeller
+	WebSite: https://github.com/OfficeDev/O365-InvestigationTooling/commits?author=bkoeller
+	Updates: Hal Noble - UpTime Sciences
+	WebSite: https://www.uptimesciences.com
+
+	Future Ideas:
+		Try something like:  Revoke-AzureADUserAllRefreshToken -ObjectId (Get-AzureADUser -SearchString huku).objectId
+		Update Groups?: Get-AzureADGroup -SearchString CloudSecGrp | Get-AzureADGroupMember | Revoke-AzureADUserAllRefreshToken
+		Add more error checking as I have noticed that sometimes the Msol session does not always initiate.  Add session initiation checks and re-tries
+		Modify to allow for Global Admins that have MFA turned on
 		
+	Updates
+		2017-11-30 - hn - Added header, added and removed 'AllowClobber' on session imports, added session cleanupGet-Mailbox
+		2017-12-06 - hn - Added SharePoint/OneDrive session revocation
+		2017-12-18 - hn - Minor formatting and cleanup
 #>
 
 #Setup Initial Variables
