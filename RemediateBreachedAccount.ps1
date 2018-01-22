@@ -40,7 +40,8 @@
 	Author : BKoeller
 	WebSite: https://github.com/OfficeDev/O365-InvestigationTooling/commits?author=bkoeller
 	Updates: Hal Noble - UpTime Sciences
-	WebSite: https://www.uptimesciences.com
+	WebSite: https://github.com/halmonrye/office365management/blob/master/RemediateBreachedAccount.ps1
+	Version: 0.5
 
 	Future Ideas:
 		Try something like:  Revoke-AzureADUserAllRefreshToken -ObjectId (Get-AzureADUser -SearchString huku).objectId
@@ -52,6 +53,7 @@
 		2017-11-30 - hn - Added header, added and removed 'AllowClobber' on session imports, added session cleanupGet-Mailbox
 		2017-12-06 - hn - Added SharePoint/OneDrive session revocation
 		2017-12-18 - hn - Minor formatting and cleanup
+		2018-01-22 - hn - Corrected two factor authentication reporting and added versioning - v0.5
 #>
 
 #Setup Initial Variables
@@ -269,8 +271,10 @@ function Enable-MFA ($upn) {
 	Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") User will need to setup their additional authentication token the next time they logon."
 
     #Find all MFA enabled users
-	Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") Current list of all Multi Factor Authentication enabled users:"
-    Get-MsolUser -UserPrincipalName $upn | select UserPrincipalName,StrongAuthenticationMethods,StrongAuthenticationRequirements
+	Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") Confirm Multi Factor Authentication is enabled for the affected user:"
+    Get-MsolUser -UserPrincipalName $upn | select UserPrincipalName,StrongAuthenticationRequirements,StrongAuthenticationMethods
+    Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") Show Current list of all Multi Factor Authentication enabled users:"
+    Get-MsolUser | select UserPrincipalName,StrongAuthenticationRequirements,StrongAuthenticationMethods | Where-Object {($_.StrongAuthenticationRequirements -ne $null)}
     Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") ##############################################################"
 	Write-Output " "
 }
