@@ -41,7 +41,6 @@
 	WebSite: https://github.com/OfficeDev/O365-InvestigationTooling/commits?author=bkoeller
 	Updates: Hal Noble - UpTime Sciences
 	WebSite: https://github.com/halmonrye/office365management/blob/master/RemediateBreachedAccount.ps1
-	Version: 0.5
 
 	Future Ideas:
 		Try something like:  Revoke-AzureADUserAllRefreshToken -ObjectId (Get-AzureADUser -SearchString huku).objectId
@@ -50,9 +49,10 @@
 		Modify to allow for Global Admins that have MFA turned on
 		
 	Updates
-		2017-11-30 - hn - Added header, added and removed 'AllowClobber' on session imports, added session cleanupGet-Mailbox
-		2017-12-06 - hn - Added SharePoint/OneDrive session revocation
+		2018-03-08 - hn - Added 'Disable-SuspiciousRules' function - v1.1
+		2018-01-22 - hn - Corrected two factor authentication reporting and added versioning - v1.0
 		2017-12-18 - hn - Minor formatting and cleanup
+		2017-12-06 - hn - Added SharePoint/OneDrive session revocation
 		2018-01-22 - hn - Corrected two factor authentication reporting and added versioning - v0.5
 #>
 
@@ -235,7 +235,22 @@ function Disable-MailforwardingRulesToExternalDomains($upn) {
     #Clean-up disabled rules
     #Get-InboxRule -Mailbox $upn | Where-Object {((($_.ForwardTo -ne $null) -or ($_.ForwardAsAttachmentTo -ne $null) -or ($_.RedirectTo -ne $null) -or ($_.SendTextMessageNotificationTo -ne $null)))} | Remove-InboxRule -Confirm:$false
 
-    Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") Disabled all mailbox rules for user: $upn"
+    Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") Disabled all mailbox forwarding rules for user: $upn"
+	Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") ##############################################################"    
+	Write-Output " "
+}
+
+function Disable-SuspiciousRules($upn) {
+    Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") ##############################################################"
+    Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") Disable Suspicious Mailbox Rules"
+	Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") --------------------------------"
+    Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") Disable mailbox rules that auto-delete sent messages, etcetera for the affected user $upn."
+    Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") We found the following rules that look suspicious: "
+
+    Get-InboxRule -Mailbox $upn | Select Name, Description, Enabled, Priority, ForwardTo, ForwardAsAttachmentTo, RedirectTo, DeleteMessage, SendTextMessageNotificationTo | Where-Object {(($_.Enabled -eq $true) -and (($_.DeleteMessage -eq $True)))} | Format-List
+	Get-InboxRule -Mailbox $upn | Where-Object {(($_.Enabled -eq $true) -and (($_.DeleteMessage -eq $True)))} | Disable-InboxRule -Confirm:$false
+
+    Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") Disabled all suspicious mailbox rules for user: $upn"
 	Write-Output "$(Get-Date -UFormat "%Y-%m-%d_%H:%M:%S") ##############################################################"    
 	Write-Output " "
 }
@@ -308,6 +323,7 @@ function Get-AuditLog ($upn) {
 	Enable-MailboxAuditing $upn
 	Remove-MailboxDelegates $upn
 	Disable-MailforwardingRulesToExternalDomains $upn
+	Disable-SuspiciousRules($upn)							  
 	Remove-MailboxForwarding $upn
 	#Enable-MFA $upn
 	Reset-Password $upn
